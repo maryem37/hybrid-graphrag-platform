@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import ForceGraph2D from 'react-force-graph-2d';
+
+// react-force-graph-2d and its d3 dependencies are CommonJS modules.
+// Vite's Rollup production bundler mangles the CJS/ESM interop and turns
+// the d3-force link `id` accessor into undefined (minified as `r`), which
+// throws "r is not a function" on the very first render.
+// Using a dynamic import AFTER mount bypasses the static-analysis bundling
+// path and forces correct CJS evaluation at runtime.
 
 const PALETTE = {
   Person: '#3b6fd8', Project: '#d98a00', Client: '#1f9d6b', Organization: '#7b4fc9', Department: '#c93d7a',
@@ -11,6 +17,14 @@ const colorOf = (t) => PALETTE[t] || '#7d8a96';
 export default function GraphView({ data, emptyText }) {
   const wrap = useRef(null);
   const [size, setSize] = useState({ w: 400, h: 400 });
+  const [ForceGraph2D, setForceGraph2D] = useState(null);
+
+  // Load the library dynamically on the client, after mount.
+  useEffect(() => {
+    import('react-force-graph-2d').then((mod) => {
+      setForceGraph2D(() => mod.default);
+    });
+  }, []);
 
   useEffect(() => {
     const el = wrap.current;
@@ -28,11 +42,8 @@ export default function GraphView({ data, emptyText }) {
   }, []);
 
   const graphData = useMemo(() => {
-    // Deep-clone all node/link data so d3-force never mutates the original objects.
-    // Without this, after the first render d3 replaces source/target strings with
-    // object references in-place; re-rendering with the same data then causes
-    // "r is not a function" because d3's internal accessor receives an object instead
-    // of the expected primitive id string.
+    // Deep-clone all node/link data so d3-force never mutates the original
+    // API response objects in React state across re-renders.
     const rawNodes = data?.nodes ? JSON.parse(JSON.stringify(data.nodes)) : [];
     const rawLinks = data?.links ? JSON.parse(JSON.stringify(data.links)) : [];
     const nodeMap = new Map();
@@ -57,7 +68,7 @@ export default function GraphView({ data, emptyText }) {
 
   return (
     <div className="graph" ref={wrap}>
-      {size.w > 0 && size.h > 0 && (
+      {ForceGraph2D && size.w > 0 && size.h > 0 && (
         <ForceGraph2D
           width={size.w}
           height={size.h}
