@@ -44,7 +44,7 @@ export default function Chat({ messages, busy, onAsk, onSelectGraph, ready }) {
             <p>{ready ? 'Try one of these:' : 'Upload your PDFs and build the knowledge graph first, then ask:'}</p>
             <div className="samples">
               {SAMPLES.map((s) => (
-                <button key={s} disabled={!ready || busy} onClick={() => onAsk(s)}>{s}</button>
+                <button key={s} disabled={busy} onClick={() => onAsk(s)}>{s}</button>
               ))}
             </div>
           </div>

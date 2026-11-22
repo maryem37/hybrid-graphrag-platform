@@ -28,8 +28,13 @@ export default function GraphView({ data, emptyText }) {
   }, []);
 
   const graphData = useMemo(() => {
-    const rawNodes = data?.nodes || [];
-    const rawLinks = data?.links || [];
+    // Deep-clone all node/link data so d3-force never mutates the original objects.
+    // Without this, after the first render d3 replaces source/target strings with
+    // object references in-place; re-rendering with the same data then causes
+    // "r is not a function" because d3's internal accessor receives an object instead
+    // of the expected primitive id string.
+    const rawNodes = data?.nodes ? JSON.parse(JSON.stringify(data.nodes)) : [];
+    const rawLinks = data?.links ? JSON.parse(JSON.stringify(data.links)) : [];
     const nodeMap = new Map();
     rawNodes.forEach((n) => {
       if (n && n.id) {
