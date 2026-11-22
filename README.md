@@ -19,6 +19,7 @@ A built-in benchmark compares three retrieval strategies (vector, graph, hybrid)
 - **Explainable answers:** inline citations `[S1]`, expandable source passages, and the subgraph used for each answer.
 - **Switchable LLM provider:** Groq, Azure OpenAI or OpenAI; local embeddings with FastEmbed.
 - **Benchmark suite:** vector vs graph vs hybrid, scored by an LLM judge.
+<img width="1917" height="971" alt="Screenshot 2026-11-22 232919" src="https://github.com/user-attachments/assets/3332f692-2fa4-4056-8b54-0b1b01912df5" />
 
 ## Architecture
 
