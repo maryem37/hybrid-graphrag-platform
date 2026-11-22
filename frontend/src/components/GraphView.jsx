@@ -66,10 +66,17 @@ export default function GraphView({ data, emptyText }) {
   const types = useMemo(() => [...new Set(graphData.nodes.map((n) => n.type))].filter(Boolean), [graphData]);
   const fg = typeof window !== 'undefined' ? (getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#14262b') : '#14262b';
 
+  // A stable key derived from the node IDs. When the graph dataset changes
+  // (e.g. switching between overview and reasoning graph), changing the key
+  // forces a full unmount + remount of ForceGraph2D, giving d3-force a clean
+  // internal state instead of trying to reconcile stale simulation data.
+  const graphKey = graphData.nodes.map((n) => n.id).sort().join('|') || 'empty';
+
   return (
     <div className="graph" ref={wrap}>
       {ForceGraph2D && size.w > 0 && size.h > 0 && (
         <ForceGraph2D
+          key={graphKey}
           width={size.w}
           height={size.h}
           graphData={graphData}
