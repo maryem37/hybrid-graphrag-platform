@@ -1,0 +1,12 @@
+[
+  {"id": 1, "type": "single-hop", "question": "Who is the project manager of Project Titan?", "expected": "Maya Patel"},
+  {"id": 2, "type": "single-hop", "question": "Why is the Fairview Data Modernization project on hold?", "expected": "The client has a budget freeze pending next fiscal year approval."},
+  {"id": 3, "type": "multi-hop", "question": "Which department is the project manager of Project Titan in, and who is that department's director?", "expected": "Maya Patel is in AI Solutions, whose director is Ravi Iyer."},
+  {"id": 4, "type": "multi-hop", "question": "Which Vice President does Maya Patel ultimately report to?", "expected": "Fatima Al-Farsi (Maya reports to Ravi Iyer, who reports to Fatima Al-Farsi)."},
+  {"id": 5, "type": "multi-hop", "question": "Who is the account manager of the client of Project Titan, and which office are they in?", "expected": "Liam Owusu, based in Toronto (client GlobalRetail)."},
+  {"id": 6, "type": "multi-hop", "question": "Which projects use Neo4j and which clients are they for?", "expected": "Project Titan and Project Atlas for GlobalRetail, and Project Sterling Fraud Graph for Sterling Capital Bank."},
+  {"id": 7, "type": "multi-hop", "question": "Who is the Director of the department that Kenji Nowak belongs to?", "expected": "Emma Watson, Director of Cyber Security."},
+  {"id": 8, "type": "multi-hop", "question": "Which employees hold the Neo4j Certified Professional certification?", "expected": "Chidi Rossi, Marcus Khan, Diego Haddad, Yuki Lindqvist and Lucas Khan."},
+  {"id": 9, "type": "multi-hop", "question": "Who is the account manager for Orbit Telecom, and who is that person's manager?", "expected": "Alice Watson, whose manager is Ethan Foster."},
+  {"id": 10, "type": "multi-hop", "question": "Which cloud provider does the Sterling Fraud Graph project run on, and who is its technical lead?", "expected": "AWS; the technical lead is Marcus Johnson (Penetration Tester, Cyber Security)."}
+]

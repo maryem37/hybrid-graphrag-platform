@@ -1,132 +1,147 @@
 # Hybrid GraphRAG Platform – Enterprise Knowledge Intelligence
 
-An intelligent enterprise knowledge retrieval platform that combines **Graph Retrieval-Augmented Generation (GraphRAG)**, knowledge graphs, and hybrid information retrieval to answer complex questions across interconnected documents.
+An intelligent enterprise knowledge retrieval platform that combines **Graph Retrieval-Augmented Generation (GraphRAG)**, knowledge graphs, and hybrid information retrieval to answer complex, multi-hop questions across interconnected documents.
 
-The platform transforms unstructured enterprise documents into structured knowledge graphs, enabling relationship-aware retrieval and contextual question answering.
+The platform transforms unstructured enterprise documents into structured knowledge graphs in **Neo4j**, enabling relationship-aware retrieval and contextual question answering with full source traceability.
 
-## Overview
-
-Traditional RAG systems primarily retrieve relevant document chunks based on similarity. However, questions involving relationships between employees, departments, projects, clients, and organizational policies can require information distributed across multiple documents.
-
-This project explores a GraphRAG-based approach to address this challenge by extracting entities and relationships, storing them in Neo4j, and retrieving relevant graph context before generating answers with an LLM.
+---
 
 ## Architecture
 
-The platform consists of two main pipelines:
+```mermaid
+flowchart LR
+  P[PDFs] --> L[Loader + chunking]
+  L --> E[Embeddings]
+  L --> X[LLM entity & relation extraction]
+  E --> N[(Neo4j: chunks, vector index)]
+  X --> N2[(Neo4j: entities, REL edges with provenance)]
+  Q[Question] --> EE[Entity extraction] --> S[Fuzzy entity linking, Lucene]
+  S --> T[Multi-hop traversal] --> F[RRF fusion]
+  Q --> V[Vector search] --> F
+  F --> A[LLM answer with citations] --> UI[React UI: answer, sources, graph]
+```
 
-### 1. Knowledge Graph Construction
+### Graph Model
+```text
+(:Document)-[:HAS_CHUNK]->(:Chunk)-[:MENTIONS]->(:Entity)-[:REL {type, sources}]->(:Entity)
+```
+Each relationship retains the chunk IDs from which it was extracted, ensuring every fact is traceable back to its exact document and page.
 
-- Load enterprise PDF documents.
-- Extract and split document content into manageable chunks.
-- Use an LLM to identify entities and relationships.
-- Transform extracted information into a structured knowledge graph.
-- Store nodes and relationships in Neo4j.
-
-### 2. Graph-Based Question Answering
-
-- Receive a natural-language question.
-- Extract relevant entities from the question using an LLM.
-- Retrieve matching entities from Neo4j.
-- Explore connected nodes and relationships using Cypher queries.
-- Build structured graph context.
-- Generate a contextual answer using an LLM.
+---
 
 ## Key Features
 
-- **Document Processing:** PDF loading, text extraction, and chunking.
-- **LLM-Powered Knowledge Extraction:** Identification of entities and relationships.
-- **Knowledge Graph Construction:** Structured representation of enterprise information.
-- **Graph-Based Retrieval:** Entity matching and multi-hop relationship traversal.
-- **Full-Text Search:** Neo4j full-text indexing for keyword-based entity retrieval.
-- **Context-Aware Generation:** LLM-generated answers grounded in retrieved graph information.
-- **Graph Visualization:** Exploration of entities and relationships through Neo4j.
+- **Document Ingestion:** PDF loading, text extraction, recursive chunking, and local embedding generation.
+- **LLM-Powered Knowledge Extraction:** Automated identification of entities (`Person`, `Project`, `Department`, `Role`, `Client`, `Technology`) and typed relationships.
+- **Neo4j Knowledge Graph:** Scalable graph storage with full-text indexes and vector index for chunk embeddings.
+- **Multi-Hop Traversal:** Flexible graph expansion (1–3 hops) traversing connected entities while avoiding high-degree hubs.
+- **Hybrid Fusion:** Combines vector similarity retrieval and graph traversal using Reciprocal Rank Fusion (RRF).
+- **Interactive UI:** React + Vite application featuring live knowledge graph visualization (`ForceGraph2D`), source passage inspection, and instant Q&A.
+
+---
+
+## Retrieval Modes
+
+| Mode | What it does |
+|---|---|
+| `vector` | Baseline RAG: embedding similarity search across document chunks. |
+| `graph` | Entity linking, 1–3 hop graph traversal, and chunks supporting traversed facts. |
+| `hybrid` | Both vector and graph retrieval merged with Reciprocal Rank Fusion (RRF). |
+
+---
 
 ## Technology Stack
 
 | Category | Technologies |
 |---|---|
-| Programming Language | Python |
-| LLM Framework | LangChain |
-| LLM Provider | Azure OpenAI |
-| Graph Database | Neo4j |
-| Graph Query Language | Cypher |
-| Document Processing | LangChain PDF Loaders |
-| Infrastructure | Docker |
-
-## Project Architecture
-
-```text
-              Enterprise PDF Documents
-                         |
-                         v
-                Document Processing
-                  (Loading / Chunking)
-                         |
-                         v
-                LLM Entity Extraction
-                         |
-                         v
-             Relationship Identification
-                         |
-                         v
-                 Knowledge Graph
-                         |
-                         v
-                    Neo4j
-                         |
-              ---------------------
-              |                   |
-              v                   v
-         Entity Search       Graph Traversal
-              |                   |
-              ---------------------
-                         |
-                         v
-               Structured Graph Context
-                         |
-                         v
-                  LLM Generation
-                         |
-                         v
-                  Final Answer
-```
-
-## Example Use Cases
-
-The platform is designed for questions that require connecting information across different enterprise documents:
-
-- Which employees work on a particular project, and who do they report to?
-- Which clients are associated with projects involving cloud technologies?
-- Which departments are connected to cybersecurity operations?
-- What relationships exist between an employee's role, department, and assigned projects?
-
-## Future Improvements
-
-The following enhancements are planned to extend the initial GraphRAG implementation:
-
-- **Hybrid Retrieval:** Combine graph traversal, full-text search, and vector similarity search.
-- **Multi-Hop Reasoning:** Retrieve information through multiple connected entities and relationships.
-- **Retrieval Evaluation:** Evaluate retrieval quality using Recall@K, MRR, and contextual precision and recall.
-- **Answer Evaluation:** Measure faithfulness and answer relevancy using RAGAS or DeepEval.
-- **Source Traceability:** Associate retrieved graph facts with their original document sources.
-- **API Development:** Expose the retrieval pipeline through FastAPI.
-- **Containerization:** Package the application and its dependencies using Docker Compose.
-
-## Project Status
-
-🚧 In development.
-
-The initial implementation focuses on knowledge graph construction and graph-based question answering. Advanced retrieval strategies, systematic evaluation, and deployment improvements are planned.
-
-## Learning Objectives
-
-- Understand GraphRAG architecture and knowledge graph construction.
-- Explore entity and relationship extraction with LLMs.
-- Work with Neo4j and Cypher for graph querying.
-- Implement relationship-aware retrieval.
-- Investigate the integration of graph-based and vector-based retrieval.
-- Evaluate the quality and reliability of LLM-powered retrieval systems.
+| **Programming Language** | Python 3.12, JavaScript / React 18 |
+| **Frameworks** | FastAPI, LangChain, Vite |
+| **LLM Providers** | Groq (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`), Azure OpenAI, OpenAI |
+| **Embeddings** | FastEmbed (`BAAI/bge-small-en-v1.5`) / OpenAI |
+| **Graph Database** | Neo4j 5 (Bolt + Cypher) |
+| **Visualization** | React Force Graph 2D |
+| **Containerization** | Docker, Docker Compose |
 
 ---
 
-**Focus Areas:** Artificial Intelligence · Generative AI · GraphRAG · Knowledge Graphs · RAG · Data Engineering
+## Project Structure
+
+```text
+hybrid-graphrag-platform/
+├── backend/
+│   ├── app/
+│   │   ├── evaluation/       # Benchmark suite & evaluation questions
+│   │   ├── ingestion/        # PDF loading, chunking, LLM extraction & Neo4j loading
+│   │   ├── rag/              # Q&A answering pipeline & prompt templates
+│   │   ├── retrieval/        # Vector search, entity linking, multi-hop traversal & RRF
+│   │   ├── config.py         # App settings & environment validation
+│   │   ├── db.py             # Neo4j connection & schema initialization
+│   │   ├── llm.py            # LLM & embeddings factory (Groq / Azure / OpenAI)
+│   │   └── main.py           # FastAPI application & API endpoints
+│   ├── Dockerfile
+│   └── requirements.txt
+├── frontend/
+│   ├── src/
+│   │   ├── components/       # Chat, GraphView, Sidebar & ErrorBoundary
+│   │   ├── api.js            # Backend API client
+│   │   ├── App.jsx           # Main React application
+│   │   └── styles.css        # Responsive styling
+│   ├── Dockerfile
+│   ├── nginx.conf
+│   └── package.json
+├── data/                     # Source enterprise PDF documents
+├── docker-compose.yml        # Multi-container orchestration (Neo4j, Backend, Frontend)
+├── .env.example              # Environment variables template
+└── README.md
+```
+
+---
+
+## Getting Started
+
+### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- An API Key from **Groq**, **Azure OpenAI**, or **OpenAI**
+
+### 1. Configuration
+Copy the template and configure your environment:
+```bash
+cp .env.example .env
+```
+
+For **Groq**:
+```env
+LLM_PROVIDER=groq
+GROQ_API_KEY=gsk_your_groq_api_key
+GROQ_CHAT_MODEL=openai/gpt-oss-120b
+EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
+EMBEDDING_DIM=384
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=nexagraph_dev
+```
+
+### 2. Run with Docker Compose
+```bash
+docker compose up --build -d
+```
+
+- **Frontend Application:** [http://localhost:3100](http://localhost:3100)
+- **FastAPI Documentation:** [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Neo4j Browser:** [http://localhost:7474](http://localhost:7474)
+
+### 3. Build the Knowledge Graph
+1. Open [http://localhost:3100](http://localhost:3100).
+2. Click **Build knowledge graph** (or click **Rebuild from scratch**).
+3. Once complete, explore the interactive graph and ask multi-hop questions.
+
+---
+
+## Benchmark: Vector vs Graph vs Hybrid
+
+Run the automated evaluation benchmark:
+```bash
+cd backend
+python -m app.evaluation.run_eval --modes vector graph hybrid
+```
+Results are saved to `eval_results/results.md` measuring accuracy and latency across single-hop and multi-hop questions.

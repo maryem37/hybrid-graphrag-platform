@@ -1,0 +1,8 @@
+.env
+__pycache__/
+.venv/
+node_modules/
+dist/
+eval_results/
+data/*.pdf
+.pytest_cache/
