@@ -28,7 +28,9 @@ export default function Chat({ messages, busy, onAsk, onSelectGraph, ready }) {
   const [text, setText] = useState('');
   const [openSource, setOpenSource] = useState(null);
   const end = useRef(null);
-  useEffect(() => end.current?.scrollIntoView({ behavior: 'smooth' }), [messages, busy]);
+  useEffect(() => {
+    end.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, busy]);
 
   const submit = (e) => {
     e.preventDefault();
